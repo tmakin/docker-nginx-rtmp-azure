@@ -365,6 +365,7 @@ package
 
 		public function connect(serverUrl) {
 			
+			log("debug", "Connecting to " + serverUrl);
 			_serverConnection.connect(_serverURL);
 		}
 		
@@ -406,6 +407,12 @@ package
         
         public function record( recordId:String ):void
         {
+			if (!_serverConnection) {
+				trace("error", "_serverConnection not defined");
+				return;
+			}
+			
+			
             // Error if we are already recording
             if( _publishStream || _currentRecordId ) {
                 log( 'error', 'record - Already recording! You have to call stopRecording() before recording again.' );
@@ -784,11 +791,7 @@ package
          */
         private function startPublishStream( recordId:String, append:Boolean ):void
         {
-			if (!_serverConnection) {
-				trace("error", "_serverConnection not defined");
-				return;
-			}
-			
+
             // Set up the publish stream
             _publishStream = new NetStream( _serverConnection );
             _publishStream.client = {};

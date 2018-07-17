@@ -1,4 +1,5 @@
-#!/bin/bash -x
+#!/bin/bash
+set -e
 
 echo filename=$1
 : ${1?Filename required}
@@ -16,7 +17,7 @@ echo src=$src
 
 
 # Upload to azure
-azcopy --source $src --destination $container/$1 --dest-key $key --dest-type blob --quiet || { echo 'azcopy failed' ; exit 1; }
+azcopy --source $src --destination $container/$1 --dest-key $key --dest-type blob --quiet
 
 # Delete the source file
 rm $src

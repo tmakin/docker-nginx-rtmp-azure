@@ -1,14 +1,14 @@
 FROM microsoft/dotnet:2.1-runtime-deps
 
+ENV SSH_PASSWD "root:Docker!"
 ENV NGINX_VERSION 1.13.9
 ENV NGINX_RTMP_VERSION 1.2.1
 ENV AZCOPY_URL https://azcopy.azureedge.net/azcopy-7-2-0/azcopy_7.2.0-netcore_linux_x64.tar.gz
 
-ENV PACKAGES libunwind8 wget
+ENV PACKAGES libunwind8 wget dialog openssh-server
 ENV DEV_PACKAGES rsync build-essential libpcre3-dev libssl-dev zlib1g-dev
 
-EXPOSE 1935
-EXPOSE 80
+EXPOSE 80 1935 2222 8080
 
 RUN apt-get update && apt-get install -y --no-install-recommends ${PACKAGES} ${DEV_PACKAGES}
 
@@ -40,6 +40,10 @@ RUN wget -O azcopy.tar.gz ${AZCOPY_URL}  \
     && tar -xf azcopy.tar.gz && rm -f azcopy.tar.gz \
     && ./install.sh && rm -f install.sh \
     && rm -rf azcopy
+
+## SSH
+RUN echo "$SSH_PASSWD" | chpasswd
+COPY sshd_config /etc/ssh/
 
 # tidy up
 RUN rm -rf /var/cache/* /tmp/* /var/lib/apt/lists/* && apt-get purge -y --auto-remove ${DEV_PACKAGES}

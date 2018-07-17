@@ -65,6 +65,8 @@ http://localhost:8080/logs
 * URL: `rtmp://localhost:1935/stream`
 * Stream Key: `somekey`
 
+## Publishing to Azure
+https://docs.microsoft.com/en-us/azure/app-service/containers/tutorial-custom-docker-image
 
 
 ## Resources
@@ -73,5 +75,5 @@ http://localhost:8080/logs
 * http://www.browndogtech.com/angularjs-container-environment-variables/
 
 ## Credits
-https://github.com/alfg/docker-nginx-rtmp
-https://github.com/Stupeflix/WebcamRecorder
+* https://github.com/alfg/docker-nginx-rtmp  
+* https://github.com/Stupeflix/WebcamRecorder

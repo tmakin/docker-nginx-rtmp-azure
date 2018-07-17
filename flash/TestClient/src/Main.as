@@ -18,7 +18,7 @@ package
 	public class Main extends Sprite
 	{
 		private var _serverUrl:String = "rtmp://localhost/stream";
-		
+
 		private var _recorder: WebcamRecorder;
 		
 		public function Main()
