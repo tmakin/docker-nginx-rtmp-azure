@@ -34,6 +34,7 @@ docker run -it -p 1935:1935 -p 8080:8080 --rm ^
 or 
 
 * Build and run container from source:
+The example below creates an connection to storage emulator on host machine. I've seen authentication issues with this approach through.
 ```
 docker build -t nginx-rtmp-azure .
 docker run -it --name rtmp -p 1935:1935 -p 8080:8080 --rm -e AZ_STORAGE_CONTAINER='http://host.docker.internal:10000/devstoreaccount1/video-uplaods' -e AZ_STORAGE_KEY='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==' nginx-rtmp-azure-record 
@@ -73,3 +74,4 @@ http://localhost:8080/logs
 
 ## Credits
 https://github.com/alfg/docker-nginx-rtmp
+https://github.com/Stupeflix/WebcamRecorder

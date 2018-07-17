@@ -47,17 +47,17 @@ RUN rm -rf /var/cache/* /tmp/* /var/lib/apt/lists/* && apt-get purge -y --auto-r
 # Init video dir
 RUN mkdir /videos && chmod 0777 /videos
 
-# Add NGINX config and static files.
+# Add NGINX config
 ADD nginx.conf /opt/nginx/nginx.conf
-ADD upload.sh /opt/upload.sh
-ADD upload-log.sh /opt/upload-log.sh
-ADD startup.sh /opt/startup.sh
 
-#ADD .bashrc /root/.bashrc
+# Shell scripts
+ADD *.sh /opt/
+
+# Static assets
 ADD assets /www/static
 
-#ADD test.txt /videos/test.txt
-#CMD ["/opt/upload-log.sh", "test.txt"]
+# Test videos
+ADD videos /www/videos
 
-
+# Startup script
 CMD ["/opt/startup.sh"]
