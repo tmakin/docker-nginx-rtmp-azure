@@ -7,4 +7,4 @@ set -o pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
 
-$DIR/upload.sh $1 &>> /opt/nginx/logs/upload.log
+$DIR/upload.sh $1 &> /tmp/upload.log

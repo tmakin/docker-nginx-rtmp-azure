@@ -27,8 +27,8 @@ In the examples below we are connecting to storage emulator running on host mach
 ```
 docker pull tmakin/nginx-rtmp-azure
 docker run -it -p 1935:1935 -p 8080:8080 --rm ^
-    -e AZ_STORAGE_CONTAINER=http://<youraccount>.blob.windows.core/video-uploads ^
-    -e AZ_STORAGE_KEY=<key> ^ 
+    -e STORAGE_CONTAINER=http://<youraccount>.blob.windows.core/video-uploads ^
+    -e STORAGE_KEY=<key> ^ 
     tmakin/nginx-rtmp-azure
 ```
 or 
@@ -37,7 +37,7 @@ or
 The example below creates an connection to storage emulator on host machine. I've seen authentication issues with this approach through.
 ```
 docker build -t nginx-rtmp-azure .
-docker run -it --name rtmp -p 1935:1935 -p 8080:8080 --rm -e AZ_STORAGE_CONTAINER='http://host.docker.internal:10000/devstoreaccount1/video-uplaods' -e AZ_STORAGE_KEY='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==' nginx-rtmp-azure-record 
+docker run -it --name rtmp -p 1935:1935 -p 8080:8080 --rm -e STORAGE_CONTAINER='http://host.docker.internal:10000/devstoreaccount1/video-uplaods' -e STORAGE_KEY='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==' nginx-rtmp-azure-record 
 ```
 
 * Stream live content to:
@@ -62,18 +62,16 @@ http://localhost:8080/logs
 
 ### OBS Configuration
 * Stream Type: `Custom Streaming Server`
-* URL: `rtmp://localhost:1935/stream`
+* URL: `rtmp://localhost/stream`
 * Stream Key: `somekey`
 
 ## Publishing to Azure
-https://docs.microsoft.com/en-us/azure/app-service/containers/tutorial-custom-docker-image
-
+see example deplyment template
+`ngnix-rtmp-azure.yaml`
 
 ## Resources
 * https://github.com/arut/nginx-rtmp-module
 * https://obsproject.com
 * http://www.browndogtech.com/angularjs-container-environment-variables/
-
-## Credits
 * https://github.com/alfg/docker-nginx-rtmp  
 * https://github.com/Stupeflix/WebcamRecorder

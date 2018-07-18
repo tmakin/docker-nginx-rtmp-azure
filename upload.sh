@@ -1,20 +1,15 @@
 #!/bin/bash
 set -e
 
-echo filename=$1
 : ${1?Filename required}
 
-key=$AZ_STORAGE_KEY
-container=$AZ_STORAGE_CONTAINER
-
-echo container=$container
-echo key=$key
-
-# Set Source path
 src=/videos/$1
+key=$STORAGE_KEY
+container=$STORAGE_CONTAINER
 
 echo src=$src
-
+echo container=$container
+echo key=${key:0:20}
 
 # Upload to azure
 azcopy --source $src --destination $container/$1 --dest-key $key --dest-type blob --quiet

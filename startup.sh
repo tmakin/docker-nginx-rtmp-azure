@@ -1,18 +1,23 @@
 #!/bin/bash
 set -e
 
-echo "Starting SSH ..."
-service ssh start
+# set default password
+: ${PASSWORD:=password}
 
-echo AZ_STORAGE_CONTAINER=$AZ_STORAGE_CONTAINER
-echo AZ_STORAGE_KEY=$AZ_STORAGE_KEY
+echo STORAGE_CONTAINER=$STORAGE_CONTAINER
+echo STORAGE_KEY=${STORAGE_KEY:0:20}...
+echo PASSWORD=${PASSWORD:0:3}...
 
-# : ${AZ_STORAGE_CONTAINER?environment var not set}
-# : ${AZ_STORAGE_KEY?environment var not set}
+: ${STORAGE_CONTAINER?environment var not set}
+: ${STORAGE_KEY?environment var not set}
 
 # Inject the environment vars into the upload script to ensure they are available from nginx
-sed -i -e 's|$AZ_STORAGE_KEY|'"$AZ_STORAGE_KEY"'|' /opt/upload.sh
-sed -i -e 's|$AZ_STORAGE_CONTAINER|'"$AZ_STORAGE_CONTAINER"'|' /opt/upload.sh
+sed -i -e 's|$STORAGE_KEY|'"$STORAGE_KEY"'|' /opt/upload.sh
+sed -i -e 's|$STORAGE_CONTAINER|'"$STORAGE_CONTAINER"'|' /opt/upload.sh
+
+# geneate htpasswd file
+htpasswd -b -c /opt/nginx/htpasswd admin $PASSWORD
+
 
 #/opt/upload-log.sh test.txt
 
