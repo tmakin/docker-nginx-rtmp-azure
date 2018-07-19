@@ -69,9 +69,15 @@ http://localhost:8080/logs
 see example deplyment template
 `ngnix-rtmp-azure.yaml`
 
+## Tools
+Delete all images via powershellcd
+```docker system prune --all```
+
 ## Resources
 * https://github.com/arut/nginx-rtmp-module
 * https://obsproject.com
 * http://www.browndogtech.com/angularjs-container-environment-variables/
 * https://github.com/alfg/docker-nginx-rtmp  
 * https://github.com/Stupeflix/WebcamRecorder
+* https://www.sandtable.com/reduce-docker-image-sizes-using-alpine/
+https://github.com/docker/for-win/issues/1038#issuecomment-370491241

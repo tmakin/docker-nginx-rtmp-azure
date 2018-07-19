@@ -17,7 +17,10 @@ package
 	 */
 	public class Main extends Sprite
 	{
-		private var _serverUrl:String = "rtmp://localhost/stream";
+
+		private var _serverUrl:String = "rtmp://localhost/test";
+		
+		
 
 		private var _recorder: WebcamRecorder;
 		
@@ -41,15 +44,34 @@ package
 		
 		private function initCanvas():void {
 			
-			var connectButton:TextField = new TextField();
-			connectButton.text = "Connect";
-			connectButton.addEventListener(MouseEvent.CLICK,clickListener);
-			addChild(connectButton);		
+			addButton(0, "Record", clickListener);
+			
+			addButton(30, "Playback", playListener);
 		}
 		
+
+		private function addButton(y:uint, text:String, listener: Function) {
+			
+			var btn:TextField = new TextField();
+			btn.text = text;
+			btn.y = y;
+			btn.height = 20;
+			btn.background = true;
+			btn.addEventListener(MouseEvent.CLICK, listener);
+			addChild(btn);	
+		}
+		
+
 		private function clickListener(e:Event):void
 		{
-			_recorder.record("test-client");
+			_recorder.record("flash-test");
+		}
+		
+		private function playListener(e:Event):void
+		{
+			_recorder.stopRecording();
+			
+			_recorder.play();
 		}
 	}
 

@@ -152,6 +152,8 @@ package
         private var _recordBufferTime : Number; // milliseconds
         private var _serverURL : String;
         private var _serverConnection : NetConnection;
+		private var _playServerConnection : NetConnection;
+		
         private var _jsListener : String;
         private var _framerate : uint;
         private var _audiorate : uint;
@@ -338,8 +340,10 @@ package
             // Add the video preview
             _videoPreview = new Video(_width, _height);
             _videoPreview.smoothing = true;
+
             stageResizeHandler();
-            _stage.addChild( _videoPreview );
+			_stage.addChildAt(_videoPreview, 0);
+			
             _stage.addEventListener(Event.RESIZE, stageResizeHandler);
 
             // Set up the timers
@@ -356,16 +360,13 @@ package
 			_serverConnection = new NetConnection();
 			_serverConnection.addEventListener( NetStatusEvent.NET_STATUS, onConnectionStatus );
 				
-            if (_serverURL != null)  {
-				connect(_serverURL);
-            }
+			connect();
 
             notify(READY);
         }
 
-		public function connect(serverUrl) {
-			
-			log("debug", "Connecting to " + serverUrl);
+		public function connect():void {
+		
 			_serverConnection.connect(_serverURL);
 		}
 		
@@ -381,6 +382,9 @@ package
         public function stageResizeHandler(event:Event = null):void {
             _videoPreview.width = _stage.stageWidth;
             _videoPreview.height = _stage.stageHeight;
+		
+
+			// _stage.setChildIndex(_videoPreview, 0);
         }
 
         public function hasCamera():Boolean {
@@ -628,8 +632,16 @@ package
         {
 			log("info", event.info.code + ": "+ event.info.description);
 			
-            if( event.info.code == "NetConnection.Connect.Success" )
+            if ( event.info.code == "NetConnection.Connect.Success" )
+			{
                 setUpRecording();
+			}
+				
+			if ( event.info.code == "NetConnection.Connect.Closed" )
+			{
+				log("debug", "reconnecting");
+                connect();
+			}
 				
             else if( event.info.code == "NetConnection.Connect.Failed" || event.info.code == "NetConnection.Connect.Rejected" )
                 log( 'error', 'Couldn\'t connect to the server. Error: ' + event.info.description );
@@ -755,6 +767,8 @@ package
             if( !_jsListener || !ExternalInterface.available )
                 return;
 
+			log("debug", "NOTIFY: " + type +" : " + arguments);
+				
             ExternalInterface.call( _jsListener, type, arguments );
         }
 
@@ -792,6 +806,8 @@ package
         private function startPublishStream( recordId:String, append:Boolean ):void
         {
 
+			log("info", "recording stared: " +recordId);
+			
             // Set up the publish stream
             _publishStream = new NetStream( _serverConnection );
             _publishStream.client = {};
@@ -883,8 +899,10 @@ package
          * 
          * @param playId String: The name of the file to play.
          */
-        private function startPlayStream( playId:String ):void
+        public function startPlayStream( playId:String ):void
         {
+			log("debug", "play " + playId);
+			
             // Set up the play stream
             _playStream = new NetStream( _serverConnection );
             _playStream.client = {};
@@ -901,7 +919,7 @@ package
             }
             
             // Start the playback
-            _playStream.play( _previousRecordId );
+            _playStream.play( playId );
             
             // Start incrementing the played time and dispatching notifications
             _playingTimer.start();
@@ -915,7 +933,7 @@ package
         {
             _playStream.pause();
             _playStream = null;
-            setUpRecording();
+            // setUpRecording();
         }
     }
 }

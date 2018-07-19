@@ -1,18 +1,7 @@
 #!/bin/bash
-set -e
 
-: ${1?Filename required}
+source /opt/env.sh
 
-src=/videos/$1
-key=$STORAGE_KEY
-container=$STORAGE_CONTAINER
+path=/videos/$1
 
-echo src=$src
-echo container=$container
-echo key=${key:0:20}
-
-# Upload to azure
-azcopy --source $src --destination $container/$1 --dest-key $key --dest-type blob --quiet
-
-# Delete the source file
-rm $src
+python3 /opt/upload.py $path $STORAGE_ACCOUNT $SAS_KEY &>> /tmp/upload.log
