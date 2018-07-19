@@ -27,22 +27,24 @@ In the examples below we are connecting to storage emulator running on host mach
 ```
 docker pull tmakin/nginx-rtmp-azure
 docker run -it -p 1935:1935 -p 8080:8080 --rm ^
-    -e STORAGE_CONTAINER=http://<youraccount>.blob.windows.core/video-uploads ^
-    -e STORAGE_KEY=<key> ^ 
+    -e ACCOUNT_NAME=<acountname> ^
+    -e SAS_KEY="st=2018-07-19T14%3A..." ^ 
     tmakin/nginx-rtmp-azure
 ```
 or 
 
 * Build and run container from source:
-The example below creates an connection to storage emulator on host machine. I've seen authentication issues with this approach through.
+The default container name is `video-uploads`
 ```
 docker build -t nginx-rtmp-azure .
-docker run -it --name rtmp -p 1935:1935 -p 8080:8080 --rm -e STORAGE_CONTAINER='http://host.docker.internal:10000/devstoreaccount1/video-uplaods' -e STORAGE_KEY='Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==' nginx-rtmp-azure-record 
+docker run -it --name rtmp -p 1935:1935 -p 8080:80 --rm -e ACCOUNT_NAME='<acountname>' -e SAS_KEY='<key>' nginx-rtmp-azure-record 
 ```
 
 * Stream live content to:
 ```
-rtmp://localhost:1935/stream
+rtmp://localhost:1935/live 
+or
+rtmp://localhost:1935/test 
 ```
 
 ### Debugging
@@ -51,13 +53,10 @@ To log into the container use:
 docker exec -it rtmp /bin/bash
 ```
 
-To view log files:
+Log from last upload is placed in `/tmp`:
 ```
-cd ./opt/nginx/logs
-```
-or via be browser:
-```
-http://localhost:8080/logs
+cat /tmp/upload.log
+cat /tmp/test_upload.log
 ```
 
 ### OBS Configuration
@@ -70,8 +69,10 @@ see example deplyment template
 `ngnix-rtmp-azure.yaml`
 
 ## Tools
-Delete all images via powershellcd
-```docker system prune --all```
+Delete all images:
+```
+docker system prune --all
+```
 
 ## Resources
 * https://github.com/arut/nginx-rtmp-module
@@ -80,4 +81,4 @@ Delete all images via powershellcd
 * https://github.com/alfg/docker-nginx-rtmp  
 * https://github.com/Stupeflix/WebcamRecorder
 * https://www.sandtable.com/reduce-docker-image-sizes-using-alpine/
-https://github.com/docker/for-win/issues/1038#issuecomment-370491241
+* https://github.com/docker/for-win/issues/1038#issuecomment-370491241
