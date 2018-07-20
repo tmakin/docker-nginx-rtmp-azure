@@ -56,7 +56,7 @@ COPY videos /videos
 COPY nginx.conf /opt/nginx/nginx.conf
 
 # Shell scripts
-COPY *.sh *.py /opt/
+COPY scripts /opt
 
 # Startup script
 CMD ["/opt/startup.sh"]

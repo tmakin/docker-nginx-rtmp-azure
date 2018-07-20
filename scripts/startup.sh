@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Bash installed for string interpolation and redirection
+# https://unix.stackexchange.com/questions/404076/what-are-bash-packages
+
 : ${STORAGE_ACCOUNT?environment var not set}
 : ${SAS_KEY?environment var not set}
 
@@ -43,6 +46,11 @@ htpasswd -b -c /opt/nginx/htpasswd admin $PASSWORD
 
 #/bin/bash
 /opt/upload.sh test.flv
+
+# setup cron
+# https://gist.github.com/andyshinn/3ae01fa13cb64c9d36e7
+cp /opt/tidyup.sh /etc/periodic/15min/tidyup
+crond
 
 echo "Starting nginx"
 /opt/nginx/sbin/nginx
