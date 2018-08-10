@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8"/>
+	<title>TestClient</title>
+	<meta name="description" content="" />
+	
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+		
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+	
+	<script src="js/swfobject.js"></script>
+	<script>
+		var flashvars = {
+		
+		};
+		
+		var params = {
+			menu: "false",
+			scale: "noScale",
+			allowFullscreen: "true",
+			allowScriptAccess: "always",
+			bgcolor: "",
+			wmode: "direct" // can cause issues with FP settings & webcam
+		};
+		var attributes = {
+			id:"recorder"
+		};
+		
+		var serverUrlKey = 'serverUrl';
+		
+		
+		function getServerUrl() {
+			var serverUrl = localStorage.getItem(serverUrlKey) || 'rtmp://your.server.com/live';
+			return serverUrl;
+		}
+		
+		function setServerUrl(url) {
+			localStorage.setItem(serverUrlKey, url);
+			location.reload();
+		}
+		
+		var log = [];
+		var MAX_LOG_SIZE = 20;
+		
+		
+		function processFlashMessage(args) {
+			
+			if(log.length > MAX_LOG_SIZE) {
+				log = log.slice(1, MAX_LOG_SIZE);
+			}
+			
+			var type = args.type;
+			var name = args.name;
+			var data = args.data;
+			
+			var logEntry = name;
+			if(data) {
+			 logEntry += ' : ' + data;
+			}
+			log.push(logEntry);
+			
+			if(type === "Event") {
+				processEvent(name, data);
+			} else {
+				syncState(name, data);
+			}
+			
+			
+			$('#notifications').val(log.join('\r\n'));
+		}
+		
+		window.flashListener = function(args) {
+		
+			// console.debug('flashListener', args);
+			
+			setTimeout(function() {
+				processFlashMessage(args);
+			});
+		}
+		
+		var AppStates = {
+			READY: 'Ready',
+			DONE: 'Done',
+			RECORDING: 'Recording',
+			PLAYBACK: 'Playback',
+			ERROR: 'Error'
+		}
+		
+		var AppEvents = {
+			RECORDING_TIME: 'RecordingTime',
+			PLAYBACK_TIME: 'PlaybackTime',
+			ERROR: 'Error'
+		}
+
+		
+
+		
+		function getFlashVars() {
+			return {
+				jsListener: 'flashListener',
+				serverURL: getServerUrl()
+			}
+		}
+		
+		var flashApi = null;
+		
+		function onSwfSuccess(args) {
+			console.debug('onSwfSuccess', args);
+			flashApi = args.ref;
+		}
+		
+		function initSWF() {
+		
+			var flashVars = getFlashVars();
+		
+			console.debug('flashVars', flashVars);
+			
+			swfobject.embedSWF(
+				"TestClient.swf", 
+				"altContent", "400px", "300px", "10.0.0", 
+				"expressInstall.swf", 
+				flashVars, params, attributes, onSwfSuccess);
+		}
+		
+	
+		function getFlashContext() {
+			return document.getElementById(attributes.id);
+		}
+		
+		function setError(error) {
+			$('#error-display')
+				.html("<b>ERROR</b> : "+error)
+				.toggle(!!error);
+		}
+		
+		function setTime(time) {
+		
+			console.debug('setTime', time);
+		
+			$('#time-display')
+				.text(time+'s')
+				.show();
+		}
+		
+		function processEvent(event, data) {
+			
+			// console.debug('processEvent', event, data, AppEvents.RECORDING_TIME);
+		
+			switch(event) {
+			  case AppEvents.ERROR:
+				setError(data);
+				break;
+				
+			  case AppEvents.RECORDING_TIME:
+			  case AppEvents.PLAYBACK_TIME:
+				setTime(data);
+				break;
+			  
+			}
+		}
+		
+		function setEnabled(selector, enabled) {
+		  $(selector).prop('disabled', !enabled);
+		}
+		
+		function syncState(state, data) {
+			// console.debug('syncState', state, data);
+			
+			var init = (state === AppStates.INIT);
+			var ready = (state === AppStates.READY);
+			var done = (state === AppStates.DONE);
+			var playback = (state === AppStates.PLAYBACK);
+			
+			setEnabled('#recordBtn', ready);
+			setEnabled('#stopRecordingBtn', state === AppStates.RECORDING);
+			
+			setEnabled('#videoId', ready)
+			
+			setEnabled('#playbackStartBtn', done);
+			setEnabled('#playbackPauseBtn', playback);
+			setEnabled('#playbackRewindBtn', done || playback);
+			
+			if(state === AppStates.ERROR) {
+				setError(data);
+			} else {
+				setError(null);
+			}
+		}
+		
+		//jquery bindings
+		$(function() {
+			$('#serverUrlInput')
+				.val(getServerUrl())
+				
+			$('#updateUrlBtn')	
+				.click(() => {
+					setServerUrl($('#serverUrlInput').val());
+				});
+				
+			$('#recordBtn').click(() => {
+				var videoId = $('#videoId').val();
+				flashApi.record(videoId);
+			});
+				
+			$('#stopRecordingBtn').click(() => {
+				flashApi.stopRecording();
+			});
+				
+			$('#playbackStartBtn').click(() => {
+				flashApi.play();
+			});
+			
+			$('#playbackPauseBtn').click(() => {
+				flashApi.pausePlaying();
+			});
+			
+			$('#playbackRewindBtn').click(() => {
+				flashApi.seek(0);
+			});
+			
+			initSWF();
+			setError(null);
+		});
+			
+	</script>
+	<style>
+		html, body { height:100%; overflow:hidden; }
+		body { margin:0; }
+		
+		.video { 
+			position: relative;
+		}
+		
+		#time-display {
+			position: absolute;
+			left: 10px;
+			bottom: 10px;
+			color: white;
+			z-index: 2;
+		}
+		
+	</style>
+</head>
+<body>
+	
+	<div class="container">
+		
+		
+		<div class="row">
+			<div class="col-md-6 ">
+				<h2>Preview</h2>
+				
+				<div class="video">
+					<div id="altContent">
+						<p>This page requires flash</p>
+						<p><a href="http://www.adobe.com/go/getflashplayer">click here to download</a></p>
+					</div>
+					<div id="time-display">0s</div>
+				</div>
+				
+			</div>
+			
+			<div class="form-group col-md-6">	
+				<h2>Notifications</h2>
+				<textarea class="form-control" id="notifications" readonly rows="10"></textarea>
+				<div id="error-display" class="alert alert-danger" role="alert"></div>
+				
+			</div>
+		</div>
+		
+		<hr class="mb-4">
+			
+		<div class="row">
+			<div class="col-md-6">	
+				<h2>Recording</h2>
+				<div class="form-group row">
+					<label class="col-sm-2 col-form-label" for="videoId">Video Id</label>
+					<input type="text" class="form-control col-sm-10" value="test-video-1234" id="videoId" size="50" disabled>
+				</div>
+				
+				<button type="button" class=" btn btn-primary" id="recordBtn" disabled>Record</button>
+				<button type="button" class="btn btn-primary" id="stopRecordingBtn" disabled>Stop</button>
+			</div>
+			
+			<div class="col-md-6">	
+				<h2>Playback</h2>
+				<button type="button" class="btn btn-primary" id="playbackStartBtn" disabled>Start</button>
+				<button type="button" class="btn btn-primary" id="playbackPauseBtn" disabled>Pause</button>
+				<button type="button" class="btn btn-primary" id="playbackRewindBtn" disabled>Rewind</button>
+			</div>
+		</div>
+		
+		<hr class="mb-4">
+	
+		<div class="row">
+			<div class="col-md-12">	
+				<h2>Server Url</h2>
+
+				<div class="input-group mb-3">
+					<input type="text" class="form-control" value="" id="serverUrlInput" size="60">
+					<div class="input-group-append">
+						<button class="btn btn-outline-secondary" type="button" id="updateUrlBtn">Reload</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
