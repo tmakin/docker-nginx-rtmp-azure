@@ -55,7 +55,7 @@
 			var data = args.data;
 			
 			var logEntry = name;
-			if(data) {
+			if(data != null) {
 			 logEntry += ' : ' + data;
 			}
 			log.push(logEntry);
@@ -172,20 +172,26 @@
 			var done = (state === AppStates.DONE);
 			var playback = (state === AppStates.PLAYBACK);
 			
-			setEnabled('#recordBtn', ready);
+			var stopped = ready || done;
+			
+			setEnabled('#recordBtn', stopped);
 			setEnabled('#stopRecordingBtn', state === AppStates.RECORDING);
 			
-			setEnabled('#videoId', ready)
+			setEnabled('#videoId', stopped)
 			
-			setEnabled('#playbackStartBtn', done);
+			setEnabled('#playbackStartBtn', stopped);
 			setEnabled('#playbackPauseBtn', playback);
-			setEnabled('#playbackRewindBtn', done || playback);
+			setEnabled('#playbackRewindBtn', stopped);
 			
 			if(state === AppStates.ERROR) {
 				setError(data);
 			} else {
 				setError(null);
 			}
+		}
+		
+		function getVideoId() {
+			return $('#videoId').val();
 		}
 		
 		//jquery bindings
@@ -199,7 +205,7 @@
 				});
 				
 			$('#recordBtn').click(() => {
-				var videoId = $('#videoId').val();
+				var videoId = getVideoId();
 				flashApi.record(videoId);
 			});
 				
@@ -208,7 +214,8 @@
 			});
 				
 			$('#playbackStartBtn').click(() => {
-				flashApi.play();
+				var videoId = getVideoId();
+				flashApi.play(videoId);
 			});
 			
 			$('#playbackPauseBtn').click(() => {
@@ -216,7 +223,7 @@
 			});
 			
 			$('#playbackRewindBtn').click(() => {
-				flashApi.seek(0);
+				flashApi.seek(3);
 			});
 			
 			initSWF();

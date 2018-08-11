@@ -152,7 +152,7 @@ package
 		private static const DEFAULT_VIDEO_BANDWIDTH:uint = 0;
 		
 		/** Default notification frequency : default is  */
-		private static const DEFAULT_NOTIFICATION_FREQUENCY:uint = 2;
+		private static const DEFAULT_NOTIFICATION_FREQUENCY:uint = 1;
 		
 		public var recordingMode:String;
 		public var recordBufferTime:Number; // milliseconds

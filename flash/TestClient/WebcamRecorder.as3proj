@@ -4,7 +4,7 @@
   <output>
     <movie outputType="Application" />
     <movie input="" />
-    <movie path="bin\TestClient.swf" />
+    <movie path="bin\WebcamRecorder.swf" />
     <movie fps="30" />
     <movie width="400" />
     <movie height="300" />

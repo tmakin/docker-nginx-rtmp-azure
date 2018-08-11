@@ -35,6 +35,10 @@ package
      * video and/or audio and stream it to a Wowza server which then stores
      * it. It can play the recorded video or sound, and send notifications
      * about its state to a provided Javascript listener.
+	 * 
+	 * Known issues:
+	 * Seek does not work becuase the recorded files don't contain metadata
+	 * https://github.com/arut/nginx-rtmp-module/wiki/FAQ#seek-does-not-work-with-flv-files-recorded-by-the-module
      * 
      * @see flash.media.Camera
      * @see flash.media.Microphone
@@ -66,6 +70,8 @@ package
 
         private var _currentRecordId : String;
         private var _previousRecordId : String;
+		private var _currentPlayId: String;
+		
 
 		
 		private var _videoPreview : Video;
@@ -75,8 +81,6 @@ package
         private var _playStream : NetStream;
 		
         private var _notificationTimer : Timer;
-        private var _recordingTimer : Timer;
-        private var _playingTimer : Timer;
         private var _flushBufferTimer : Timer;
 		private var _initTimer : Timer;
 
@@ -113,10 +117,6 @@ package
 			
             _stage.addEventListener(Event.RESIZE, stageResizeHandler);
 
-            // Set up the timers
-            _recordingTimer = new Timer( 1000 );
-            _playingTimer = new Timer( 1000 );
-			
 			// notification frequency
 			if( _config.notificationFrequency == 0 ) {
                 _log.warn('init - notificationFrequency has to be greater or equal to zero! We won\' notify for this session.' );
@@ -273,8 +273,12 @@ package
 			// _stage.setChildIndex(_videoPreview, 0);
         }
 
-		public function getRecordingTime(): int {
-			return _recordingTimer.currentCount;
+		public function getRecordingTime(): Number {
+			if (_publishStream) {
+				return _publishStream.time;
+			}
+			
+			return 0.0;
 		}
 		
 		public function getState(): String {
@@ -295,7 +299,7 @@ package
 			}
 			
 			_log.error(description + " : invalid state : expected [" + validState + "], found [" + _state + "]");
-			return true;
+			return false;
 		}
 		
 		private function checkStates(description: String, validStates: Array): Boolean {
@@ -313,7 +317,7 @@ package
 		
         public function record( recordId:String ):Boolean
         {
-			if (!checkState('record', AppStates.READY)) {
+			if (!checkStates('record', [AppStates.READY, AppStates.DONE])) {
 				return false;
 			}
 			
@@ -326,9 +330,11 @@ package
             // If there is a playback in progress, we stop it
             if( _playStream ) {
                 _log.info('record - Stopped playback to record' );
-                stopPlayStream();
+                stopPlaying();
             }
             
+			setUpRecording();
+			
             // Start recording and dispatch a notification
             _currentRecordId = recordId;
 			
@@ -388,9 +394,6 @@ package
             
             // Dispatch a notification
             setState(AppStates.DONE);
-            
-            // Reset the recording time
-            _recordingTimer.reset();
 			
 			return true;
         }
@@ -456,7 +459,7 @@ package
 			
             if ( event.info.code == "NetConnection.Connect.Success" )
 			{
-                setUpRecording();
+                getCameraPersmission();
 			}
 				
 			if ( event.info.code == "NetConnection.Connect.Closed" )
@@ -478,12 +481,11 @@ package
 			
 			_webcam.setMode(_config.width, _config.height, _config.framerate, true);
 			_webcam.setQuality(_config.bandwidth, _config.quality );
-			_webcam.setKeyFrameInterval( _config.framerate );
+			_webcam.setKeyFrameInterval( 1 );
 			_webcam.addEventListener(StatusEvent.STATUS, notifyCameraEnabled);
 			
-			_log.debug("Camera attached");
-            _videoPreview.attachCamera( _webcam );
-			return true;
+
+			return setUpRecording();
 		}
 		
 		private function setupMic(): Boolean {
@@ -516,17 +518,26 @@ package
 			*/
 		}
         
-        /** Set up the recording device(s) (webcam and/or microphone) */
-        private function setUpRecording():void
-        {
-			_log.debug("setUpRecording");
-			
-
+		private function getCameraPersmission(): void {
 			if (!checkReadyState()) {
 				_initTimer = new Timer( 500 );
 				_initTimer.addEventListener(TimerEvent.TIMER, checkReadyState);
 				_initTimer.start();	
 			}
+		}
+		
+        /** Set up the recording device(s) (webcam and/or microphone) */
+        private function setUpRecording():Boolean
+        {
+			if (!_webcam) {
+				return false;
+			}
+			
+			_log.debug("setUpRecording");
+			
+			_videoPreview.attachNetStream( null );
+            _videoPreview.attachCamera( _webcam );
+			return true;
         }
         
         /** Set up the player */
@@ -552,6 +563,11 @@ package
         {
 			_notifications.notifyEvent(type, arguments);
         }
+		
+		private function notifyError(message:String ):void
+        {
+			_notifications.notifyEvent(AppEvents.ERROR, message);
+        }
 
         /** Notify camera enabled */
         private function notifyCameraEnabled( event:StatusEvent ):void
@@ -569,20 +585,23 @@ package
         /** Notify of the recording time */
         private function notifyRecordingTime( event:Event ):void
         {
-            _notifications.notifyTime( AppEvents.RECORDING_TIME, _recordingTimer.currentCount );
+			var time:Number = 0.0;
+			if (_publishStream) {
+				time = _publishStream.time;
+			}
+			
+            _notifications.notifyTime( AppEvents.RECORDING_TIME, time );
         }
         
         /** Notify of the played time */
         private function notifyPlayedTime( event:Event  = null):void
         {
+			var time:Number = 0.0;
 			if (_playStream) {
-				_log.debug(_playStream.bufferLength);
-				
-				if (_playStream.bufferLength == 0) {
-					_log.debug('buffer empty');
-				}
+				time = _playStream.time;
 			}
-            _notifications.notifyTime( AppEvents.PLAYBACK_TIME, _playingTimer.currentCount);
+			
+            _notifications.notifyTime( AppEvents.PLAYBACK_TIME, time);
         }
         
         /**
@@ -613,7 +632,6 @@ package
 				_publishStream.bufferTime = _config.recordBufferTime;
 				
 				// Start incrementing the recording time and dispatching notifications
-				_recordingTimer.start();
 				if (_notificationTimer){
 					_notificationTimer.addEventListener( TimerEvent.TIMER, notifyRecordingTime );
 				}
@@ -650,7 +668,6 @@ package
             if (_notificationTimer) {
                   _notificationTimer.removeEventListener( TimerEvent.TIMER, notifyRecordingTime );
              }
-            _recordingTimer.stop();
         }
         
         /** Check the buffer length and stop the publish stream if empty */
@@ -675,36 +692,45 @@ package
             _publishStream.publish( null );
             _publishStream = null;
         }
-        
+		
+        public function playLast(id: String):Boolean
+        {
+			if (!checkState('play', AppStates.DONE )) {
+				return false;
+			}
+			
+			return play(_previousRecordId);
+		}
+		
+
 		/**
          * Play the previous recording. You have to call <code>stopRecording()</code>
          * before being able to call <code>play()</code>.
          * 
          * @see #stopRecording()
          */
-        public function play():Boolean
+        public function play(id: String):Boolean
         {
-			if (!checkState('play', AppStates.DONE )) {
+			if (!checkStates('play', [AppStates.READY, AppStates.DONE] )) {
 				return false;
 			}
 			
-			if( !_previousRecordId ) {
-				_log.error('play - Nothing recorded yet. You have to call stopRecording() before play().' );
+			if( !id) {
+				_log.error('play - Invalid playback id' );
 				return false;
 			}
-				
+			
             // If we already started playing, we just resume, dispatch a notification and restore scheduled notifications
-            if( _playStream ) {
+            if ( _playStream && _currentPlayId === id) {
                 _playStream.resume();
-				_log.debug("playStream resumed");
+				_log.debug("playStream resumed" + _currentPlayId);
             }
-			else if (!startPlayStream( _previousRecordId ))
+			else if (!startPlayStream( id ))
 			{
 				return false;
 			}
 			
 			// Start incrementing the played time and dispatching notifications
-            _playingTimer.start();
             if (_notificationTimer)
 			{
                 _notificationTimer.addEventListener( TimerEvent.TIMER, notifyPlayedTime );
@@ -723,8 +749,6 @@ package
 				return false;
 			}
 			
-			_playStream.time;
-
 			_playStream.pause();
 			_log.debug("playStream paused");
 			
@@ -736,17 +760,33 @@ package
 				_notificationTimer.removeEventListener( TimerEvent.TIMER, notifyPlayedTime );
 			}
 			
-			 _playingTimer.stop();
-			 
+
 			return true;
         }
-        
+                
+        /** Stop the play stream */
+        public function stopPlaying():void
+        {
+			pausePlaying();
+			_playStream = null;
+			_currentPlayId = null;
+            // setUpRecording();
+        }
+		
 		       //On status events from a NetStream object 
         private function onPlayStatus( event:NetStatusEvent ):void 
         { 
-            _log.debug( "Status event from " + event.target.info.uri + " at " + event.target.time ); 
+            _log.debug( "Status event from " + event.info.code + " at " + event.target.time ); 
+			
+			switch(event.info.code) {
+				case "NetStream.Play.StreamNotFound":
+					this.stopPlaying();
+					this.notifyError("Stream not found");
+					break;
+			}
             //handle status events 
         } 
+		
 		
         /**
          * Start the play stream.
@@ -760,12 +800,12 @@ package
             // Set up the play stream
             _playStream = new NetStream( _serverConnection );
             _playStream.client = {};
-            _playStream.bufferTime = 2;
+            //_playStream.bufferTime = 4;
             
             // Replace the webcam preview by the stream playback
             setUpPlaying();
 			
-            _playStream.addEventListener(StatusEvent.STATUS, onPlayStatus);
+            _playStream.addEventListener(NetStatusEvent.NET_STATUS, onPlayStatus);
 			
             // Add an event listener to dispatch a notification and go back to the webcam preview when the playing is finished
             _playStream.client.onPlayStatus = function( info:Object ):void
@@ -776,24 +816,17 @@ package
 				
                 if ( info.code == "NetStream.Play.Complete" )
 				{
-                    pausePlaying();
-					_playStream = null;
+                    stopPlaying();
+
 					
 				}
             }
-            
-			_playingTimer.reset();
-			
+
             // Start the playback
             _playStream.play( playId );
+			_currentPlayId = playId;
 			return true;
         }
-        
-        /** Stop the play stream */
-        private function stopPlayStream():void
-        {
 
-            // setUpRecording();
-        }
     }
 }

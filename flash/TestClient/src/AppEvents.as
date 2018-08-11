@@ -23,6 +23,7 @@ package
         /** Type of the notification dispatched periodically while playing */
         public static const PLAYBACK_TIME : String = "PlaybackTime";
         
-
+        /** Error event */
+        public static const ERROR : String = "Error";
 	}
 }
