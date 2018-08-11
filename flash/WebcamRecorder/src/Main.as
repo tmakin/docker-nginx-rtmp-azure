@@ -462,14 +462,16 @@ package
                 getCameraPersmission();
 			}
 				
-			if ( event.info.code == "NetConnection.Connect.Closed" )
+			else if ( event.info.code == "NetConnection.Connect.Closed" )
 			{
-				_log.debug("reconnecting");
-                connect();
+				_serverConnection = null;
+				setState(AppStates.ERROR, "Server connection lost");
 			}
 				
-            else if( event.info.code == "NetConnection.Connect.Failed" || event.info.code == "NetConnection.Connect.Rejected" )
+            else if ( event.info.code == "NetConnection.Connect.Failed" || event.info.code == "NetConnection.Connect.Rejected" )
+			{
                 _log.error('Couldn\'t connect to the server. Error: ' + event.info.description );
+			}
         }
         
 		private function setupWebcam():Boolean {

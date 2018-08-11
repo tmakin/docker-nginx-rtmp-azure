@@ -27,6 +27,20 @@
 			id:"recorder"
 		};
 		
+		function initSWF() {
+		
+			var flashVars = getFlashVars();
+		
+			console.debug('flashVars', flashVars);
+			
+			swfobject.embedSWF(
+				"WebcamRecorder.swf", 
+				"altContent", "400px", "300px", "10.0.0", 
+				"expressInstall.swf", 
+				flashVars, params, attributes, onSwfSuccess);
+		}
+		
+		
 		var serverUrlKey = 'serverUrl';
 		
 		
@@ -111,19 +125,6 @@
 			flashApi = args.ref;
 		}
 		
-		function initSWF() {
-		
-			var flashVars = getFlashVars();
-		
-			console.debug('flashVars', flashVars);
-			
-			swfobject.embedSWF(
-				"TestClient.swf", 
-				"altContent", "400px", "300px", "10.0.0", 
-				"expressInstall.swf", 
-				flashVars, params, attributes, onSwfSuccess);
-		}
-		
 	
 		function getFlashContext() {
 			return document.getElementById(attributes.id);
@@ -137,7 +138,7 @@
 		
 		function setTime(time) {
 		
-			console.debug('setTime', time);
+			//console.debug('setTime', time);
 		
 			$('#time-display')
 				.text(time+'s')
