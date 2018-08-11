@@ -44,6 +44,9 @@ htpasswd -b -c /opt/nginx/htpasswd admin $PASSWORD
 
 #cat /opt/env.sh
 
+# make video directory
+mkdir -m755 /videos
+
 #/bin/bash
 /opt/upload.sh test.flv
 

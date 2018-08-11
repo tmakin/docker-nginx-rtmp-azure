@@ -1,5 +1,6 @@
 FROM python:3.7.0-alpine3.7
 
+ENV YAMDI_VERSION 1.9
 ENV NGINX_VERSION 1.13.9
 ENV NGINX_RTMP_VERSION 1.2.1
 ENV AZCOPY_URL https://azcopy.azureedge.net/azcopy-7-2-0/azcopy_7.2.0-netcore_linux_x64.tar.gz
@@ -14,13 +15,12 @@ RUN	apk add --update --no-cache ${PACKAGES} && apk add --no-cache --virtual .dev
 # Get nginx source.
 RUN cd /tmp && \
   wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && \
-  tar zxf nginx-${NGINX_VERSION}.tar.gz && \
-  rm nginx-${NGINX_VERSION}.tar.gz
+  tar zxf nginx-${NGINX_VERSION}.tar.gz
 
 # Get nginx-rtmp module.
 RUN cd /tmp && \
   wget https://github.com/arut/nginx-rtmp-module/archive/v${NGINX_RTMP_VERSION}.tar.gz && \
-  tar zxf v${NGINX_RTMP_VERSION}.tar.gz && rm v${NGINX_RTMP_VERSION}.tar.gz
+  tar zxf v${NGINX_RTMP_VERSION}.tar.gz
 
 # Compile nginx with nginx-rtmp module.
 # --without-http_rewrite_module  removes need for pcre
@@ -34,6 +34,15 @@ RUN cd /tmp/nginx-${NGINX_VERSION} && \
   --without-http_rewrite_module \
   --with-debug && \
   cd /tmp/nginx-${NGINX_VERSION} && make && make install
+
+
+# Download and compile yamdi
+RUN cd /tmp && \
+    wget -O yamdi-${YAMDI_VERSION}.tar.gz https://github.com/ioppermann/yamdi/archive/1.9.tar.gz  && \
+    tar zxf yamdi-${YAMDI_VERSION}.tar.gz && \
+    cd yamdi-${YAMDI_VERSION} && \
+    gcc yamdi.c -o yamdi -O2 -Wall && \
+    make && make install
 
 # forward request and error logs to docker log collector
 RUN ln -sf /dev/stdout /opt/nginx/logs/access.log \
@@ -49,8 +58,8 @@ RUN rm -rf /var/cache/* /tmp/* /var/lib/apt/lists/* && apk del .dev_packages
 COPY www /www
 
 # Test videos
-COPY videos /test_videos
-COPY videos /videos
+COPY videos /recordings
+COPY videos /test_recordings
 
 # Add NGINX config
 COPY nginx.conf /opt/nginx/nginx.conf
@@ -60,3 +69,4 @@ COPY scripts /opt
 
 # Startup script
 CMD ["/opt/startup.sh"]
+

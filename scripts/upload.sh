@@ -2,6 +2,8 @@
 
 source /opt/env.sh
 
-path=/videos/$1
+path=/recordings/$1
+
+#yamdi -i $path -o /videos/$1
 
 python3 /opt/upload.py $path $STORAGE_ACCOUNT $SAS_KEY &> /tmp/upload.log

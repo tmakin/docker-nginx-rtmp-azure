@@ -37,7 +37,7 @@ or
 The default container name is `video-uploads`
 ```
 docker build -t nginx-rtmp-azure .
-docker run -it --name rtmp -p 1935:1935 -p 8080:80 --rm -e ACCOUNT_NAME='<acountname>' -e SAS_KEY='<key>' nginx-rtmp-azure-record 
+docker run -it --name rtmp -p 1935:1935 -p 8080:80 --rm -e ACCOUNT_NAME='<acountname>' -e SAS_KEY='<key>' nginx-rtmp-azure 
 ```
 
 * Stream live content to:
@@ -65,7 +65,7 @@ cat /tmp/test_upload.log
 * Stream Key: `somekey`
 
 ## Publishing to Azure
-see example deplyment template
+see example deployment template
 `ngnix-rtmp-azure.yaml`
 
 ## Tools
