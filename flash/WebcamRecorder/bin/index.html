@@ -169,6 +169,7 @@
 		function syncState(state, data) {
 			// console.debug('syncState', state, data);
 			
+			var error = (state === AppStates.ERROR);
 			var init = (state === AppStates.INIT);
 			var recording = (state === AppStates.RECORDING);
 			var ready = (state === AppStates.READY);
@@ -176,7 +177,7 @@
 			var playback = (state === AppStates.PLAYBACK);
 			
 			var stopped = ready || done;
-			
+			setEnabled('#initBtn', error);
 			setEnabled('#recordBtn', stopped);
 			setEnabled('#stopRecordingBtn', recording);
 			setEnabled('#recording-dot', recording);
@@ -208,6 +209,10 @@
 					setServerUrl($('#serverUrlInput').val());
 				});
 				
+			$('#initBtn').click(() => {
+				flashApi.init();
+			});
+			
 			$('#recordBtn').click(() => {
 				var videoId = getVideoId();
 				flashApi.record(videoId);
@@ -315,6 +320,7 @@
 				
 				<button type="button" class=" btn btn-primary" id="recordBtn" disabled>Record</button>
 				<button type="button" class="btn btn-primary" id="stopRecordingBtn" disabled>Stop</button>
+				<button type="button" class=" btn btn-primary" id="initBtn" disabled>Init</button>
 			</div>
 			
 			<div class="col-md-6">	
