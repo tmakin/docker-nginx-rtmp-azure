@@ -11,9 +11,6 @@ parser.add_argument('account', help='account name')
 parser.add_argument('sas', help='SAS signature name')
 parser.add_argument('--container', help='container name (default:video-uploads)', default="video-uploads");
 
-#parser.add_argument('container', help='container name')
-
-# parser.add_argument('sas', help='shared access signature')
 args = parser.parse_args()
 
 file = args.file

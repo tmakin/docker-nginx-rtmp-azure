@@ -190,8 +190,8 @@
 			
 			var canSeek = done || playback;
 			
-			setEnabled('#playbackSeek0Btn', canSeek);
-			setEnabled('#playbackSeek5Btn', canSeek);
+			setEnabled('#playbackSeek0Btn', playback);
+			setEnabled('#playbackSeek5Btn', playback);
 			
 			if(state === AppStates.ERROR) {
 				setError(data);

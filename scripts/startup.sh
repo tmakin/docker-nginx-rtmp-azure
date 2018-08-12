@@ -42,13 +42,23 @@ sed -i -e 's|$MAX_SIZE|'"$MAX_SIZE"'|' /opt/nginx/nginx.conf
 # generate htpasswd file
 htpasswd -b -c /opt/nginx/htpasswd admin $PASSWORD
 
-#cat /opt/env.sh
+# cat /opt/env.sh
 
-# make video directory
-mkdir -m755 /videos
+#make video dir
+mkdir /videos
 
-#/bin/bash
-/opt/upload.sh test.flv
+# create nginx user (not working)
+#addgroup -g 82 -S www-data
+#adduser -u 82 -D -S -G www-data www-data
+
+# set permissions
+#chmod 777 /recordings
+#chmod 777 /videos
+#chmod 777 /opt/live_upload.sh
+
+#test the upload script
+# NB if this is run once as root then nginx no longer has access to it via www-data. Don't know why...
+/opt/live_upload.sh test.flv
 
 # setup cron
 # https://gist.github.com/andyshinn/3ae01fa13cb64c9d36e7

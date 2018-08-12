@@ -410,7 +410,6 @@ package
         public function seek( time:Number ):void
         {
             if( !_playStream ) {
-                _log.error('seek - Not playing anything!' );
                 return;
             }
             
@@ -738,6 +737,8 @@ package
             // If we already started playing, we just resume, dispatch a notification and restore scheduled notifications
             if ( _playStream && _currentPlayId === id) {
                 _playStream.resume();
+				_playStream.seek(_playStream.time); //sekk required to fetch metadata
+				
 				_log.debug("playStream resumed" + _currentPlayId);
             }
 			else if (!startPlayStream( id ))
@@ -757,6 +758,16 @@ package
 			return true;
         }
 		
+		public function cancelPlayState(): void {
+			// Dispatch a notification
+			setState(AppStates.DONE);
+            
+            // Stop incrementing the played time and dispatching notifications
+			if (_notificationTimer) {
+				_notificationTimer.removeEventListener( TimerEvent.TIMER, notifyPlayedTime );
+			}
+		}
+		
 		 /** Pause the current playback */
         public function pausePlaying():Boolean
         {
@@ -767,31 +778,31 @@ package
 			_playStream.pause();
 			_log.debug("playStream paused");
 			
-            // Dispatch a notification
-			setState(AppStates.DONE);
-            
-            // Stop incrementing the played time and dispatching notifications
-			if (_notificationTimer) {
-				_notificationTimer.removeEventListener( TimerEvent.TIMER, notifyPlayedTime );
-			}
+			cancelPlayState();
 			
-
 			return true;
         }
                 
         /** Stop the play stream */
-        public function stopPlaying():void
+        public function stopPlaying():Boolean
         {
-			pausePlaying();
+			if (!_playStream) {
+				return false;
+			}
+			
+			cancelPlayState();
+
+			_playStream.close();
 			_playStream = null;
 			_currentPlayId = null;
+			return true;
             // setUpRecording();
         }
 		
 		       //On status events from a NetStream object 
         private function onPlayStatus( event:NetStatusEvent ):void 
         { 
-            _log.debug( "Status event from " + event.info.code + " at " + event.target.time ); 
+            //_log.debug( "Status event from " + event.info.code + " at " + event.target.time ); 
 			
 			switch(event.info.code) {
 				case "NetStream.Play.StreamNotFound":

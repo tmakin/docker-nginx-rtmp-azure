@@ -1,12 +1,12 @@
-FROM python:3.7.0-alpine3.7
+FROM python:3.7.0-alpine3.8
 
 ENV YAMDI_VERSION 1.9
 ENV NGINX_VERSION 1.13.9
 ENV NGINX_RTMP_VERSION 1.2.1
 ENV AZCOPY_URL https://azcopy.azureedge.net/azcopy-7-2-0/azcopy_7.2.0-netcore_linux_x64.tar.gz
 
-ENV PACKAGES ca-certificates openssl libffi bash apache2-utils
-ENV DEV_PACKAGES pkgconf binutils binutils-libs build-base gcc libc-dev libc-dev make musl-dev openssl-dev zlib-dev libffi-dev
+ENV PACKAGES openssl libffi bash apache2-utils
+ENV DEV_PACKAGES pkgconf binutils build-base gcc libc-dev libc-dev make musl-dev openssl-dev zlib-dev libffi-dev
 
 EXPOSE 80 1935
 
@@ -14,7 +14,7 @@ RUN	apk add --update --no-cache ${PACKAGES} && apk add --no-cache --virtual .dev
 
 # Get nginx source.
 RUN cd /tmp && \
-  wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && \
+  wget https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && \
   tar zxf nginx-${NGINX_VERSION}.tar.gz
 
 # Get nginx-rtmp module.
@@ -59,7 +59,6 @@ COPY www /www
 
 # Test videos
 COPY videos /recordings
-COPY videos /test_recordings
 
 # Add NGINX config
 COPY nginx.conf /opt/nginx/nginx.conf
