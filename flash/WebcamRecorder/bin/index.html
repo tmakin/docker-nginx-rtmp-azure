@@ -186,7 +186,12 @@
 			
 			setEnabled('#playbackStartBtn', stopped);
 			setEnabled('#playbackPauseBtn', playback);
-			setEnabled('#playbackRewindBtn', stopped);
+			
+			
+			var canSeek = done || playback;
+			
+			setEnabled('#playbackSeek0Btn', canSeek);
+			setEnabled('#playbackSeek5Btn', canSeek);
 			
 			if(state === AppStates.ERROR) {
 				setError(data);
@@ -231,9 +236,14 @@
 				flashApi.pausePlaying();
 			});
 			
-			$('#playbackRewindBtn').click(() => {
-				flashApi.seek(3);
+			$('#playbackSeek0Btn').click(() => {
+				flashApi.seek(0);
 			});
+			
+			$('#playbackSeek5Btn').click(() => {
+				flashApi.seek(5);
+			});
+			
 			
 			initSWF();
 			syncState();
@@ -327,7 +337,8 @@
 				<h2>Playback</h2>
 				<button type="button" class="btn btn-primary" id="playbackStartBtn" disabled>Start</button>
 				<button type="button" class="btn btn-primary" id="playbackPauseBtn" disabled>Pause</button>
-				<button type="button" class="btn btn-primary" id="playbackRewindBtn" disabled>Rewind</button>
+				<button type="button" class="btn btn-primary" id="playbackSeek0Btn" disabled>Seek (0s)</button>
+				<button type="button" class="btn btn-primary" id="playbackSeek5Btn" disabled>Seek (5s)</button>
 			</div>
 		</div>
 		
