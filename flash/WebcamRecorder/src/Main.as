@@ -180,6 +180,7 @@ package
             ExternalInterface.addCallback( 'record', record );
             ExternalInterface.addCallback( 'stopRecording', stopRecording );
 
+			ExternalInterface.addCallback( 'init', init );
             ExternalInterface.addCallback( 'play', play );
             ExternalInterface.addCallback( 'seek', seek );
             ExternalInterface.addCallback( 'pausePlaying', pausePlaying );
@@ -606,6 +607,12 @@ package
             _notifications.notifyTime( AppEvents.PLAYBACK_TIME, time);
         }
         
+		//On status events from a NetStream object 
+        private function onPublishStatus( event:NetStatusEvent ):void 
+        { 
+            _log.debug( "Publish Status : " + event.info.code + " at " + event.target.time ); 
+        } 
+		
         /**
          * Start the publish stream.
          * 
@@ -622,7 +629,8 @@ package
 				// Set up the publish stream
 				_publishStream = new NetStream( _serverConnection );
 				_publishStream.client = {};
-				
+				_publishStream.addEventListener(NetStatusEvent.NET_STATUS, onPublishStatus);
+								
 				// Start the recording
 				_publishStream.publish( recordId, append?"append":"record" );
 				
@@ -632,8 +640,12 @@ package
 				
 				// Set the buffer
 				_publishStream.bufferTime = _config.recordBufferTime;
-				
-				// Start incrementing the recording time and dispatching notifications
+
+
+
+
+
+                // Start incrementing the recording time and dispatching notifications
 				if (_notificationTimer){
 					_notificationTimer.addEventListener( TimerEvent.TIMER, notifyRecordingTime );
 				}
@@ -691,7 +703,8 @@ package
         /** Actually stop the publish stream */
         private function doStopPublishStream():void
         {
-            _publishStream.publish( null );
+			_publishStream.close();
+            //_publishStream.publish( null );
             _publishStream = null;
         }
 		
