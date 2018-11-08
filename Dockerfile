@@ -1,9 +1,8 @@
-FROM python:3.7.0-alpine3.8
+FROM python:3.7.1-alpine3.8
 
 ENV YAMDI_VERSION 1.9
 ENV NGINX_VERSION 1.13.9
 ENV NGINX_RTMP_VERSION 1.2.1
-ENV AZCOPY_URL https://azcopy.azureedge.net/azcopy-7-2-0/azcopy_7.2.0-netcore_linux_x64.tar.gz
 
 ENV PACKAGES openssl libffi bash apache2-utils
 ENV DEV_PACKAGES pkgconf binutils build-base gcc libc-dev libc-dev make musl-dev openssl-dev zlib-dev libffi-dev
@@ -17,10 +16,11 @@ RUN cd /tmp && \
   wget https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && \
   tar zxf nginx-${NGINX_VERSION}.tar.gz
 
-# Get nginx-rtmp module.
 RUN cd /tmp && \
-  wget https://github.com/arut/nginx-rtmp-module/archive/v${NGINX_RTMP_VERSION}.tar.gz && \
-  tar zxf v${NGINX_RTMP_VERSION}.tar.gz
+  wget https://github.com/arut/nginx-rtmp-module/archive/v${NGINX_RTMP_VERSION}.tar.gz
+
+# Unzip needs to run as separate command
+RUN cd /tmp && tar -xzf v${NGINX_RTMP_VERSION}.tar.gz
 
 # Compile nginx with nginx-rtmp module.
 # --without-http_rewrite_module  removes need for pcre
